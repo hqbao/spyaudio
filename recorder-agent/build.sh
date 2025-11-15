@@ -1,5 +1,6 @@
 # Remove old bin
 rm -rf spysys
+rm -rf spysys-macos
 
 # Example cross-compilation command on a Mac
 # This tells clang to compile for the ARM64 CPU (arch arm64) 

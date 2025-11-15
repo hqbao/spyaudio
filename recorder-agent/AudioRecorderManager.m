@@ -32,8 +32,7 @@
     if (self) {
         _fileManager = [NSFileManager defaultManager];
         [self setupFileURL];
-        // Permission request is now a no-op on macOS for this simplified setup
-        // The application's entitlements/info.plist handle mic access.
+        [self requestPermission];
     }
     return self;
 }
@@ -68,15 +67,30 @@
     }
 }
 
-/**
- * @brief Placeholder for macOS permission request, which is handled differently.
- */
 - (void)requestPermission {
-    // On macOS, microphone access is typically granted through app entitlements 
-    // or by checking the status of AVCaptureDevice permission.
-    // For a simple command-line tool, we proceed with recording and rely on 
-    // the system to prompt if necessary, or fail gracefully.
-    NSLog(@"Note: In macOS tools, microphone permission is handled by system settings/entitlements.");
+    AVAudioSession *session = [AVAudioSession sharedInstance];
+    NSError *error = nil;
+
+    // Set category for both playing and recording
+    [session setCategory:AVAudioSessionCategoryPlayAndRecord mode:AVAudioSessionModeDefault options:0 error:&error];
+    if (error) {
+        NSLog(@"Error setting audio session category: %@", error.localizedDescription);
+        return;
+    }
+
+    // Activate the session
+    [session setActive:YES error:&error];
+    if (error) {
+        NSLog(@"Error activating audio session: %@", error.localizedDescription);
+        return;
+    }
+
+    // Request recording permission
+    [session requestRecordPermission:^(BOOL granted) {
+        if (!granted) {
+            NSLog(@"Permission to record denied. The app will not be able to record.");
+        }
+    }];
 }
 
 #pragma mark - Recording Logic

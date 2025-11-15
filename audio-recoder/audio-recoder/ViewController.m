@@ -1,10 +1,3 @@
-//
-//  ViewController.m
-//  audio-recoder
-//
-//  Created by Hoa Quoc Bao (Baul) on 14/11/25.
-//
-
 #import "ViewController.h"
 
 @implementation ViewController
@@ -12,6 +5,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    // Set up the view aesthetics
     self.view.backgroundColor = [UIColor systemGroupedBackgroundColor];
     self.title = @"Simple Audio Recorder";
     
@@ -94,12 +88,14 @@
         [self.recorderManager startRecording];
     }
     
+    // Call updateUI to reflect the state change (e.g., button color, status text)
     [self updateUI];
 }
 
 - (void)playButtonTapped:(UIButton *)sender {
     [self.recorderManager startPlayback];
-    [self updateUI];
+    // We don't need to call updateUI here, as the playback state doesn't affect
+    // the UI elements defined (only recording state does).
 }
 
 #pragma mark - UI Updates
@@ -119,7 +115,7 @@
     } else {
         recordImage = [UIImage systemImageNamed:@"mic.circle.fill"];
         recordTintColor = [UIColor systemBlueColor]; // Blue for mic
-        self.statusLabel.text = canPlay ? @"Tap to Re-record or Play" : @"Tap to Record First Clip";
+        self.statusLabel.text = canPlay ? @"Ready to Re-record or Play" : @"Tap to Record First Clip";
     }
     
     // Animate the change for a smoother feel
@@ -144,6 +140,7 @@
 
 #pragma mark - AudioRecorderDelegate
 
+// This delegate method is called by the AudioRecorderManager when recording finishes.
 - (void)audioRecorderDidFinishRecordingSuccessfully:(BOOL)flag {
     // Ensure UI is updated after AVFoundation finishes its processes
     [self updateUI];

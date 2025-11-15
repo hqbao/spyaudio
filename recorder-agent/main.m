@@ -53,7 +53,6 @@
 #pragma mark - AudioRecorderDelegate
 
 // This delegate method is called when stopRecording finishes saving the file
-// FIX: Corrected method signature to match the AudioRecorderDelegate protocol
 - (void)audioRecorderDidFinishRecordingSuccessfully:(BOOL)flag {
     if (flag) {
         NSLog(@"\n--- 2. Recording saved successfully. Starting Playback... ---");
@@ -84,14 +83,14 @@
 - (NSString *)getRecordedFilePath {
     NSFileManager *fileManager = [NSFileManager defaultManager];
     
-    // Get the current working directory path
-    NSString *currentPath = [fileManager currentDirectoryPath];
+    // FIX: Switched to NSDocumentDirectory to match the AudioRecorderManager's safe location for iOS deployment.
+    NSURL *directoryURL = [fileManager URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask][0];
     
     // The file name is fixed
     NSString *fileName = @"single_recording.m4a";
     
     // Combine the directory path and the file name
-    return [currentPath stringByAppendingPathComponent:fileName];
+    return [directoryURL.path stringByAppendingPathComponent:fileName];
 }
 
 - (void)uploadRecordedFile {

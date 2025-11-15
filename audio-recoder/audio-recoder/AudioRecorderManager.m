@@ -23,34 +23,56 @@
     if (self) {
         _fileManager = [NSFileManager defaultManager];
         [self setupFileURL];
-        [self requestPermission];
+        // Configure session upon initialization
+        [self configureAudioSession];
     }
     return self;
 }
 
 #pragma mark - Setup and File Paths
 
-- (NSURL *)getDirectoryURL {
-    return [_fileManager URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask][0];
+/**
+ * @brief Gets the URL for the standard Documents Directory, which is writable
+ * and accessible on both iOS and macOS apps.
+ */
+- (NSURL *)getDocumentsDirectoryURL {
+    // NSSearchPathForDirectoriesInDomains is the robust way to find standard system directories
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    if (paths.count > 0) {
+        return [NSURL fileURLWithPath:paths[0] isDirectory:YES];
+    }
+    NSLog(@"CRITICAL: Could not find Documents directory path!");
+    return nil;
 }
 
 - (void)setupFileURL {
-    // Define a fixed file name for overriding
-    NSString *fileName = @"single_recording.m4a";
-    _audioFileURL = [[self getDirectoryURL] URLByAppendingPathComponent:fileName];
+    NSURL *directoryURL = [self getDocumentsDirectoryURL];
+    if (!directoryURL) {
+        // If directory is null, stop setup
+        return;
+    }
     
-    // Check if the file already exists to set initial canPlay state
+    NSString *fileName = @"single_recording.m4a";
+    
+    // The final URL where the audio file will be stored
+    _audioFileURL = [directoryURL URLByAppendingPathComponent:fileName];
+    NSLog(@"Audio file location: %@", _audioFileURL.path);
+    
+    // Check initial state
     self.canPlay = [_fileManager fileExistsAtPath:_audioFileURL.path];
     if (self.canPlay) {
         NSLog(@"Found existing recording file.");
     }
 }
 
-- (void)requestPermission {
+// MARK: Audio Session Management
+
+- (void)configureAudioSession {
     AVAudioSession *session = [AVAudioSession sharedInstance];
     NSError *error = nil;
 
-    // Set category for both playing and recording
+    // Use PlayAndRecord category for both microphone input and speaker output
+    // This simplifies the session management compared to switching categories.
     [session setCategory:AVAudioSessionCategoryPlayAndRecord mode:AVAudioSessionModeDefault options:0 error:&error];
     if (error) {
         NSLog(@"Error setting audio session category: %@", error.localizedDescription);
@@ -68,6 +90,8 @@
     [session requestRecordPermission:^(BOOL granted) {
         if (!granted) {
             NSLog(@"Permission to record denied. The app will not be able to record.");
+        } else {
+            NSLog(@"Microphone access granted.");
         }
     }];
 }
@@ -75,9 +99,12 @@
 #pragma mark - Recording Logic
 
 - (void)startRecording {
-    if (self.isRecording) return;
+    if (self.isRecording || !_audioFileURL) return;
     
-    // Recording settings (AAC format)
+    // Ensure the session is ready
+    [self configureAudioSession];
+    
+    // Recording settings (AAC format, compatible with iOS/macOS)
     NSDictionary *settings = @{
         AVFormatIDKey: @(kAudioFormatMPEG4AAC),
         AVSampleRateKey: @44100.0,
@@ -86,7 +113,6 @@
     };
 
     NSError *error = nil;
-    // Use the fixed file URL
     _audioRecorder = [[AVAudioRecorder alloc] initWithURL:_audioFileURL settings:settings error:&error];
     
     if (error) {
@@ -95,13 +121,19 @@
     }
 
     _audioRecorder.delegate = self;
+    
+    if (![_audioRecorder prepareToRecord]) {
+         NSLog(@"Failed to prepare audio recorder.");
+         _audioRecorder = nil;
+         return;
+    }
 
     if ([_audioRecorder record]) {
         self.isRecording = YES;
         self.canPlay = NO; // Cannot play while recording
-        NSLog(@"Recording started to file: %@", _audioFileURL.path);
+        NSLog(@"Recording started.");
     } else {
-        NSLog(@"Failed to start recording. Check device/simulator microphone access.");
+        NSLog(@"Failed to start recording. Permission may be denied or file access failed.");
         self.isRecording = NO;
     }
 }
@@ -115,24 +147,16 @@
 #pragma mark - Playback Logic
 
 - (void)startPlayback {
-    // Step 1: Check if file exists before attempting playback
-    if (!self.canPlay) {
-        NSLog(@"Playback attempt failed: No recorded file exists.");
+    // Step 1: Check if file exists
+    if (!self.canPlay || !_audioFileURL) {
+        NSLog(@"Playback attempt failed: No recorded file exists at path.");
         return;
     }
     
     [self stopPlayback]; // Stop any current playback
 
-    // Step 2: Reactivate audio session for playback reliability
-    AVAudioSession *session = [AVAudioSession sharedInstance];
-    NSError *sessionError = nil;
-    // Set category again and activate to ensure the session is ready for output
-    // The previous category (PlayAndRecord) is retained, but activation is key.
-    [session setActive:YES error:&sessionError];
-    if (sessionError) {
-        NSLog(@"Error reactivating audio session for playback: %@", sessionError.localizedDescription);
-        return;
-    }
+    // Step 2: Ensure the session is active for output
+    [self configureAudioSession];
     
     // Step 3: Initialize Player
     NSError *error = nil;
@@ -140,23 +164,20 @@
     
     if (error) {
         // This is the common failure point for "DataSource read failed"
-        NSLog(@"Playback failed to initialize (DataSource read failed): %@", error.localizedDescription);
-        NSLog(@"Attempted file path: %@", _audioFileURL.path);
+        NSLog(@"Playback failed to initialize (Error: %@). Path: %@", error.localizedDescription, _audioFileURL.path);
         
-        // --- Added Debugging Check ---
-        // Check file size to help debug why read failed
+        // Debugging check
         NSDictionary *fileAttributes = [_fileManager attributesOfItemAtPath:_audioFileURL.path error:nil];
         NSNumber *fileSize = fileAttributes[NSFileSize];
         if (fileSize) {
-             NSLog(@"File exists. File size: %@ bytes.", fileSize);
+             NSLog(@"File size: %@ bytes.", fileSize);
             if ([fileSize longLongValue] == 0) {
-                 NSLog(@"CRITICAL: The file has 0 bytes. This means the recording failed to write data.");
+                 NSLog(@"CRITICAL: The file has 0 bytes. Recording may have been denied or interrupted.");
             }
         } else {
             NSLog(@"File does not exist or attributes could not be read.");
             self.canPlay = NO;
         }
-        // -----------------------------
         
         _audioPlayer = nil;
         return;
@@ -164,8 +185,13 @@
     
     // Step 4: Play
     _audioPlayer.delegate = self;
-    [_audioPlayer play];
-    NSLog(@"Playback started.");
+    
+    if ([_audioPlayer prepareToPlay]) {
+        [_audioPlayer play];
+        NSLog(@"Playback started.");
+    } else {
+        NSLog(@"Playback failed to prepare.");
+    }
 }
 
 - (void)stopPlayback {
@@ -181,10 +207,9 @@
 - (void)audioRecorderDidFinishRecording:(AVAudioRecorder *)recorder successfully:(BOOL)flag {
     self.isRecording = NO;
     if (flag) {
-        // Recording finished successfully
+        // Update state and get file size for confirmation
         self.canPlay = [_fileManager fileExistsAtPath:_audioFileURL.path];
         
-        // Log file status to aid debugging
         NSDictionary *fileAttributes = [_fileManager attributesOfItemAtPath:_audioFileURL.path error:nil];
         NSNumber *fileSize = fileAttributes[NSFileSize];
         NSLog(@"Recording finished successfully. File size: %@ bytes.", fileSize);
@@ -205,9 +230,12 @@
 #pragma mark - AVAudioPlayerDelegate
 
 - (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag {
-    // Cleanup after playback finishes
     _audioPlayer = nil;
     NSLog(@"Playback finished.");
+}
+
+- (void)requestPermission {
+    
 }
 
 @end
