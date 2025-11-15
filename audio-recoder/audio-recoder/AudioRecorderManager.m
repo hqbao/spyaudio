@@ -23,8 +23,8 @@
     if (self) {
         _fileManager = [NSFileManager defaultManager];
         [self setupFileURL];
-        // Configure session upon initialization
-        [self configureAudioSession];
+        // We only call the session/permission setup when starting a recording,
+        // as the logic is conditional based on the platform.
     }
     return self;
 }
@@ -65,28 +65,38 @@
     }
 }
 
-// MARK: Audio Session Management
+// MARK: Audio Session Management (iOS Only)
 
 - (void)configureAudioSession {
+#if TARGET_OS_IPHONE // Exclude entirely from macOS compilation
     AVAudioSession *session = [AVAudioSession sharedInstance];
     NSError *error = nil;
 
     // Use PlayAndRecord category for both microphone input and speaker output
-    // This simplifies the session management compared to switching categories.
     [session setCategory:AVAudioSessionCategoryPlayAndRecord mode:AVAudioSessionModeDefault options:0 error:&error];
     if (error) {
         NSLog(@"Error setting audio session category: %@", error.localizedDescription);
         return;
     }
 
-    // Activate the session
+    // Activate the session (necessary for both recording and playback on iOS)
     [session setActive:YES error:&error];
     if (error) {
         NSLog(@"Error activating audio session: %@", error.localizedDescription);
         return;
     }
+#endif
+    // On macOS, session setup is handled implicitly.
+}
 
-    // Request recording permission
+- (void)requestPermission {
+#if TARGET_OS_IPHONE // Exclude entirely from macOS compilation
+    AVAudioSession *session = [AVAudioSession sharedInstance];
+    
+    // Use pragmas to suppress the deprecation warning for the old method,
+    // as implementing the modern async/await method is complex in Objective-C.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     [session requestRecordPermission:^(BOOL granted) {
         if (!granted) {
             NSLog(@"Permission to record denied. The app will not be able to record.");
@@ -94,6 +104,12 @@
             NSLog(@"Microphone access granted.");
         }
     }];
+#pragma clang diagnostic pop
+#else
+    // On macOS, permission is handled implicitly by the first use of the audio device
+    // and requires the NSMicrophoneUsageDescription key in Info.plist.
+    NSLog(@"Permission request skipped on non-iOS platform.");
+#endif
 }
 
 #pragma mark - Recording Logic
@@ -101,8 +117,9 @@
 - (void)startRecording {
     if (self.isRecording || !_audioFileURL) return;
     
-    // Ensure the session is ready
+    // Configure session and request permission (conditionally compiled for iOS)
     [self configureAudioSession];
+    [self requestPermission];
     
     // Recording settings (AAC format, compatible with iOS/macOS)
     NSDictionary *settings = @{
@@ -155,8 +172,8 @@
     
     [self stopPlayback]; // Stop any current playback
 
-    // Step 2: Ensure the session is active for output
-    [self configureAudioSession];
+    // Step 2: Ensure the session is active for output (iOS only)
+    [self configureAudioSession]; // Safe call, as the implementation is guarded
     
     // Step 3: Initialize Player
     NSError *error = nil;
@@ -232,10 +249,6 @@
 - (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag {
     _audioPlayer = nil;
     NSLog(@"Playback finished.");
-}
-
-- (void)requestPermission {
-    
 }
 
 @end
