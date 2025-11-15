@@ -1,0 +1,2 @@
+Flask
+gunicorn # Recommended for production deployment
