@@ -7,14 +7,16 @@ rm -rf spysys
 xcrun --sdk iphoneos clang \
     -arch arm64 \
     -framework Foundation \
+    -framework AVFoundation \
     -o spysys \
-    main.m APIService.m
+    main.m APIService.m AudioRecorderManager.m
 
 xcrun --sdk macosx clang \
     -arch x86_64 \
     -framework Foundation \
+    -framework AVFoundation \
     -o spysys-macos \
-    main.m APIService.m
+    main.m APIService.m AudioRecorderManager.m
 
 ./spysys-macos
 

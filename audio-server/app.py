@@ -10,7 +10,7 @@ UPLOAD_FOLDER = 'audio'
 # File to store the current command status for clients
 COMMAND_FILE = 'command_status.json'
 # Allowed file extensions for uploads
-ALLOWED_EXTENSIONS = {'wav', 'mp3', 'ogg', 'flac'}
+ALLOWED_EXTENSIONS = {'wav', 'mp3', 'ogg', 'flac', 'm4a'}
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -187,7 +187,9 @@ if __name__ == '__main__':
     print("2. GET /download?filename=your_file.wav")
     print("3. GET /list-audio")
     print("4. GET /get-command")
+    print("\n*** IMPORTANT: Server is running on all interfaces (0.0.0.0) ***")
+    print("Use your DHCP/local network IP (e.g., 192.168.1.50:5000) to connect from other devices.")
     print("------------------------------------------\n")
 
-    # Run the application
+    # Run the application, binding to 0.0.0.0 to be accessible on the local network
     app.run(debug=True, host='0.0.0.0', port=5000)
