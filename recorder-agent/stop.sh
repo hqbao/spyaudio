@@ -1,2 +1,2 @@
-launchctl stop hq.bao.spysys
-launchctl unload /Library/LaunchDaemons/hq.bao.spysys.plist
+launchctl stop hq.bao.recagent
+launchctl unload /Library/LaunchDaemons/hq.bao.recagent.plist
