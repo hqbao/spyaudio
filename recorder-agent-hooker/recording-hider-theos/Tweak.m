@@ -26,27 +26,35 @@ BOOL new_shouldForceViewToShow(id self, SEL _cmd) {
 // The constructor function runs automatically when the dylib is loaded into SpringBoard.
 __attribute__((constructor))
 static void initializeTweak() {
-    NSLog(@"Start recorder hider program");
+    NSLog(@"[RecordingHider] Start recorder hider program");
     @autoreleasepool {
         // Get the target class by string name
         Class SBRecordingIndicatorViewControllerClass = objc_getClass("SBRecordingIndicatorViewController");
 
         if (SBRecordingIndicatorViewControllerClass) {
+            NSLog(@"[RecordingHider] Class found. Attempting to hook methods...");
+            
             // 1. Hook updateIndicatorVisibility:
             SEL updateVisSelector = @selector(updateIndicatorVisibility:);
             Method updateVisMethod = class_getInstanceMethod(SBRecordingIndicatorViewControllerClass, updateVisSelector);
             if (updateVisMethod) {
-                // Swap the original implementation with our new NO-OP implementation.
                 method_setImplementation(updateVisMethod, (IMP)new_updateIndicatorVisibility);
+                NSLog(@"[RecordingHider] updateIndicatorVisibility: HOOKED");
+            } else {
+                NSLog(@"[RecordingHider] ERROR: updateIndicatorVisibility: method not found at runtime.");
             }
 
             // 2. Hook _shouldForceViewToShowForCurrentBacklightLuminance
             SEL shouldForceSelector = @selector(_shouldForceViewToShowForCurrentBacklightLuminance);
             Method shouldForceMethod = class_getInstanceMethod(SBRecordingIndicatorViewControllerClass, shouldForceSelector);
             if (shouldForceMethod) {
-                // Swap the original implementation with our function that returns NO.
                 method_setImplementation(shouldForceMethod, (IMP)new_shouldForceViewToShow);
+                NSLog(@"[RecordingHider] _shouldForceViewToShowForCurrentBacklightLuminance HOOKED");
+            } else {
+                 NSLog(@"[RecordingHider] ERROR: _shouldForceViewToShowForCurrentBacklightLuminance method not found at runtime.");
             }
+        } else {
+            NSLog(@"[RecordingHider] ERROR: SBRecordingIndicatorViewController Class not found!");
         }
     }
 }

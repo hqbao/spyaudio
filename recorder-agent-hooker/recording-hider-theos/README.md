@@ -7,4 +7,6 @@ This library is to hook into SpringBoard and disable microphone indicator
 2. Run command to deploy in iPhone
 ./deploy.sh
 
-Please note you should change root password accordantly, the default password is "000000"
+Note:
+- You should change root password accordantly, the default password is "000000"
+- You should change device IP accordantly
