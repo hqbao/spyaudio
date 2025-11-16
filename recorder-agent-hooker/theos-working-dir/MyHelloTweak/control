@@ -1,0 +1,9 @@
+Package: hq.bao.myhellotweak
+Name: MyHelloTweak
+Description: My first tweak for ElleKit/Rootless Jailbreaks.
+Version: 0.0.1
+Architecture: iphoneos-arm64
+Maintainer: Bao HQ
+Author: Bao HQ
+Section: Tweaks
+Depends: firmware (>= 15.0), mobilesubstrate | ellekit
