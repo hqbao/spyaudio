@@ -20,20 +20,23 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface AudioRecorderManager : NSObject <AVAudioRecorderDelegate, AVAudioPlayerDelegate>
 
-// Changed 'weak' to 'assign' for compatibility with Manual Reference Counting (MRC)
-@property (nonatomic, assign) id<AudioRecorderDelegate> delegate; 
+@property (nonatomic, assign) id<AudioRecorderDelegate> delegate; // FIX: Changed 'weak' to 'assign' for MRC
 @property (nonatomic, assign, readonly) BOOL isRecording;
+@property (nonatomic, assign, readonly) BOOL isPlaying; // <--- NEW: Indicates if audio is currently playing
 @property (nonatomic, assign, readonly) BOOL canPlay; // Indicates if a recording file exists
+
+// Expose the actual file URL for use in APIService
+@property (nonatomic, strong, readonly) NSURL *audioFileURL;
 
 // Initialization
 - (instancetype)init;
 
 // Recording methods
-- (void)requestPermission; // This method is now a placeholder for macOS
+- (void)requestPermission;
 - (void)startRecording;
 - (void)stopRecording;
 
-// Playback method
+// Playback methods
 - (void)startPlayback;
 - (void)stopPlayback;
 

