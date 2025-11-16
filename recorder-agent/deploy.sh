@@ -1,4 +1,4 @@
-USERNAME=mobile
+USERNAME=root
 PASSWORD="alpine"
 DEVICE_IP="192.168.1.38"
 
