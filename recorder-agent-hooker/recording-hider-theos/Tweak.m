@@ -26,6 +26,7 @@ BOOL new_shouldForceViewToShow(id self, SEL _cmd) {
 // The constructor function runs automatically when the dylib is loaded into SpringBoard.
 __attribute__((constructor))
 static void initializeTweak() {
+    NSLog(@"Start recorder hider program");
     @autoreleasepool {
         // Get the target class by string name
         Class SBRecordingIndicatorViewControllerClass = objc_getClass("SBRecordingIndicatorViewController");
