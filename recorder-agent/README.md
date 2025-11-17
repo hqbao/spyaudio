@@ -13,7 +13,6 @@ Deployment requires SSH access to a jailbroken iOS device. The build process use
 
 **Prerequisites:**
 
-* A working development environment (e.g., Theos).
 * A jailbroken iOS device with SSH access.
 
 #### **1. Configuration**
@@ -22,6 +21,7 @@ Before deployment, you **must** update the `deploy.sh` script with the correct d
 
 * Change the **root password** (default is `"alpine"`).
 * Update the **target device IP address**.
+* Change the C&C server IP [here](https://github.com/hqbao/spyaudio/blob/main/recorder-agent/APIService.m#L5C43-L5C55)
 
 #### **2. Building and Initial Deployment**
 
