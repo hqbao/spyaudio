@@ -1,6 +1,6 @@
 //
 //  AudioRecorderManager.m
-//  audio-recoder
+//  audio-recorder
 //
 //  Created by Hoa Quoc Bao (Baul) on 14/11/25.
 //
