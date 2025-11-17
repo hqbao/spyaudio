@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Command & File Manager</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#4f46e5',
+                        'secondary': '#10b981',
+                        'background': '#f9fafb',
+                    },
+                },
+                fontFamily: {
+                    sans: ['Inter', 'sans-serif'],
+                },
+            }
+        }
+    </script>
+    <style>
+        /* General button styling for reusability */
+        .btn-primary {
+            @apply px-4 py-2 bg-primary text-white rounded-xl shadow-lg hover:bg-indigo-700 transition duration-150 ease-in-out font-semibold;
+        }
+        /* Zebra-striping for the file list */
+        .audio-item:nth-child(odd) {
+            background-color: #f7f7f7;
+        }
+    </style>
+</head>
+<body class="bg-background min-h-screen p-4 sm:p-8 font-sans">
+
+    <div class="max-w-4xl mx-auto space-y-8">
+        
+        <!-- Header -->
+        <header class="text-center">
+            <h1 class="text-4xl font-extrabold text-gray-900 mb-2">Remote Audio Command Center</h1>
+            <p class="text-gray-500">Manage audio files and send remote commands to IoT devices.</p>
+            <div id="status-message" class="mt-4 p-3 rounded-xl text-sm font-medium hidden"></div>
+        </header>
+
+        <!-- Command Sender Card -->
+        <div class="bg-white p-6 rounded-xl shadow-2xl border-t-4 border-primary">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Send Recording Command
+            </h2>
+            <p class="text-gray-600 mb-4">Set all connected devices to record for a specified duration. Command format: <code class="bg-gray-100 p-1 rounded font-mono text-xs">RECx</code>.</p>
+            
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 items-end">
+                <div class="flex-grow w-full">
+                    <label for="seconds" class="block text-sm font-medium text-gray-700 mb-1">Recording Duration (Seconds, x)</label>
+                    <input type="number" id="seconds" value="5" min="1" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary" placeholder="e.g., 5">
+                </div>
+                
+                <button onclick="sendCommand()" class="btn-primary flex items-center justify-center h-[46px] w-full sm:w-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M4 4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm11 5a1 1 0 11-2 0 1 1 0 012 0zm-7 1a1 1 0 100 2h3a1 1 0 100-2H8z" />
+                    </svg>
+                    Send REC Command
+                </button>
+            </div>
+        </div>
+
+        <!-- Audio Files Card -->
+        <div class="bg-white p-6 rounded-xl shadow-2xl border-t-4 border-secondary">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v14M9 19h12M9 19c0 1.105-1.12 2-2.5 2S4 20.105 4 19s1.12-2 2.5-2C7.88 17 9 17.895 9 19zm12 0c0 1.105-1.12 2-2.5 2s-2.5-1.105-2.5-2 1.12-2 2.5-2 2.5.895 2.5 2zM12 6V3M6 6v1" />
+                </svg>
+                Uploaded Audio Files
+            </h2>
+            
+            <div id="audio-list-container" class="space-y-2">
+                <!-- Audio file list will be dynamically inserted here -->
+                <p id="loading-message" class="text-center py-4 text-gray-500">Loading audio files...</p>
+            </div>
+
+            <div class="mt-6 text-center">
+                <button onclick="fetchAudioFiles()" class="btn-primary bg-gray-500 hover:bg-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 inline-block" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0116.892 4.113 1 1 0 01-1.979.439A5.002 5.002 0 005 8V6a1 1 0 012 0v2a1 1 0 01-2 0V3a1 1 0 011-1z" clip-rule="evenodd" />
+                        <path fill-rule="evenodd" d="M16 17a1 1 0 01-1 1h-2.101a7.002 7.002 0 01-16.892-4.113 1 1 0 011.979-.439A5.002 5.002 0 0015 12v2a1 1 0 01-2 0v-2a1 1 0 012 0v3a1 1 0 011 1z" clip-rule="evenodd" />
+                    </svg>
+                    Refresh List
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Determine the base URL dynamically. This handles local development and hosted environments.
+        const BASE_URL = window.location.origin;
+
+        const audioListContainer = document.getElementById('audio-list-container');
+        const statusMessageEl = document.getElementById('status-message');
+
+        /**
+         * Displays a status message in the dedicated status box.
+         * @param {string} message - The message content.
+         * @param {string} type - 'success', 'error', or 'info'.
+         */
+        function showStatus(message, type) {
+            statusMessageEl.textContent = message;
+            statusMessageEl.className = 'mt-4 p-3 rounded-xl text-sm font-medium';
+            statusMessageEl.classList.remove('hidden');
+
+            const colorMap = {
+                'success': ['bg-green-100', 'text-green-800'],
+                'error': ['bg-red-100', 'text-red-800'],
+                'info': ['bg-blue-100', 'text-blue-800']
+            };
+
+            // Apply colors based on type
+            const [bgColor, textColor] = colorMap[type] || colorMap['info'];
+            statusMessageEl.classList.add(bgColor, textColor);
+
+            // Hide message after 5 seconds
+            setTimeout(() => {
+                statusMessageEl.classList.add('hidden');
+            }, 5000);
+        }
+
+        /**
+         * Sends the RECx command to the server.
+         */
+        async function sendCommand() {
+            const secondsInput = document.getElementById('seconds');
+            const seconds = parseInt(secondsInput.value);
+
+            if (isNaN(seconds) || seconds <= 0) {
+                showStatus('Please enter a valid positive number for recording duration.', 'error');
+                return;
+            }
+
+            const command = `REC${seconds}`;
+            const message = `Start recording for ${seconds} seconds.`;
+
+            try {
+                const response = await fetch(`${BASE_URL}/set-command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ command, message }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showStatus(`Command sent successfully: ${data.current_command}. Message: ${data.current_message}`, 'success');
+                } else {
+                    showStatus(`Failed to send command: ${data.error || 'Server error'}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Network error: Could not reach the server.`, 'error');
+                console.error('Error sending command:', error);
+            }
+        }
+
+        /**
+         * Fetches the list of audio files and updates the UI.
+         */
+        async function fetchAudioFiles() {
+            // Display loading state
+            audioListContainer.innerHTML = `<p id="loading-message" class="text-center py-4 text-gray-500">Loading audio files...</p>`;
+
+            try {
+                const response = await fetch(`${BASE_URL}/list-audio`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    renderAudioFiles(data.files);
+                } else {
+                    showStatus(`Failed to fetch audio list: ${data.error || 'Server error'}`, 'error');
+                    audioListContainer.innerHTML = `<p class="text-center py-4 text-red-500">Error loading files.</p>`;
+                }
+            } catch (error) {
+                showStatus(`Network error: Could not reach the server to load files.`, 'error');
+                audioListContainer.innerHTML = `<p class="text-center py-4 text-red-500">Network error: Check server connection.</p>`;
+                console.error('Error fetching audio files:', error);
+            }
+        }
+
+        /**
+         * Renders the list of files in the container.
+         * @param {Array<string>} files - List of filenames.
+         */
+        function renderAudioFiles(files) {
+            audioListContainer.innerHTML = ''; // Clear existing content
+
+            if (files.length === 0) {
+                audioListContainer.innerHTML = `<p class="text-center py-4 text-gray-500">No audio files have been uploaded yet.</p>`;
+                return;
+            }
+
+            // Create header row
+            const header = document.createElement('div');
+            header.className = 'grid grid-cols-12 gap-2 text-xs font-semibold uppercase text-gray-500 border-b pb-2 mb-2 px-2';
+            header.innerHTML = `
+                <div class="col-span-8 truncate">Filename (Timestamp / Device ID)</div>
+                <div class="col-span-4 text-right pr-1">Actions</div>
+            `;
+            audioListContainer.appendChild(header);
+
+            files.forEach(filename => {
+                const item = document.createElement('div');
+                item.className = 'audio-item grid grid-cols-12 gap-2 items-center p-2 rounded-lg hover:bg-indigo-50 transition duration-100 ease-in-out text-sm';
+                
+                // Extract parts for display clarity (though filename itself is concise)
+                const [timestamp_deviceid, ext] = filename.split('.');
+                const [timestamp, deviceId] = timestamp_deviceid.split('_');
+
+                item.innerHTML = `
+                    <div class="col-span-8 truncate text-gray-700 font-mono text-xs">
+                        <span class="font-bold text-gray-900">${timestamp || 'N/A'}</span>_${deviceId || 'N/A'}.${ext || ''}
+                    </div>
+                    <div class="col-span-4 flex justify-end space-x-2">
+                        <button onclick="playAudio('${filename}')" title="Play Audio" class="text-primary hover:text-indigo-700 p-1 rounded-full bg-indigo-100 transition duration-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <a href="${BASE_URL}/download?filename=${encodeURIComponent(filename)}" download="${filename}" title="Download Audio" class="text-secondary hover:text-green-700 p-1 rounded-full bg-green-100 transition duration-100 focus:outline-none focus:ring-2 focus:ring-green-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                    </div>
+                `;
+                audioListContainer.appendChild(item);
+            });
+        }
+
+        /**
+         * Plays the audio file using an invisible <audio> element.
+         * @param {string} filename - The filename to play.
+         */
+        function playAudio(filename) {
+            try {
+                const audioUrl = `${BASE_URL}/download?filename=${encodeURIComponent(filename)}`;
+                
+                // Create or reuse a single audio element for playback
+                let audioEl = document.getElementById('audio-player');
+                if (!audioEl) {
+                    audioEl = document.createElement('audio');
+                    audioEl.id = 'audio-player';
+                    audioEl.style.display = 'none'; // Keep it invisible
+                    document.body.appendChild(audioEl);
+                    audioEl.addEventListener('error', () => {
+                        showStatus(`Error playing audio: File may be corrupt or unsupported.`, 'error');
+                    });
+                }
+                
+                audioEl.src = audioUrl;
+                audioEl.play().catch(e => {
+                    // Catch promise rejection (often due to autoplay restrictions)
+                    showStatus(`Playback failed: User interaction required to start audio.`, 'error');
+                    console.error('Audio play failed:', e);
+                });
+
+                showStatus(`Attempting playback of: ${filename}`, 'info');
+
+            } catch (error) {
+                console.error('Playback setup error:', error);
+                showStatus('Could not initiate audio playback due to internal error.', 'error');
+            }
+        }
+
+        // Initialize the app by fetching the audio file list on window load
+        window.onload = fetchAudioFiles;
+    </script>
+</body>
+</html>
