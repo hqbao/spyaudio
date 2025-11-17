@@ -1,43 +1,45 @@
 #import <Foundation/Foundation.h>
 
-// Define the completion block signature.
-typedef void (^APIServiceCompletionBlock)(id _Nullable data, NSError * _Nullable error);
+NS_ASSUME_NONNULL_BEGIN
+
+// Define the completion block type for all API calls
+typedef void (^APIServiceCompletionBlock)(id _Nullable responseObject, NSError * _Nullable error);
 
 /**
- * @brief A singleton class for handling RESTful API network requests using NSURLSession.
+ * @brief Singleton class for handling all network communication.
+ * Implements NSURLSessionDelegate for ATS/SSL pinning bypass.
  */
 @interface APIService : NSObject <NSURLSessionDelegate>
 
-// Public read-only access to baseURL 
-@property (nonatomic, strong, readonly) NSString * _Nullable baseURL;
-
-// The NSURLSession instance. Marked _Nonnull as it is initialized in -init.
-@property (nonatomic, strong, readonly) NSURLSession * _Nonnull session;
+@property (nonatomic, strong, readonly) NSString *baseURL;
 
 /**
- * @brief Returns the shared singleton instance of the APIService.
+ * @brief Returns the shared singleton instance of APIService.
  */
-+ (instancetype _Nonnull)sharedInstance;
++ (instancetype)sharedInstance;
 
 /**
- * @brief Performs a GET request.
+ * @brief Performs a GET request. Used for the /get-command endpoint.
  */
-- (void)fetchDataWithEndpoint:(NSString * _Nonnull)endpoint
-                   completion:(APIServiceCompletionBlock _Nonnull)completionBlock;
+- (void)fetchDataWithEndpoint:(NSString *)endpoint
+                   completion:(APIServiceCompletionBlock)completionBlock;
 
 /**
- * @brief Performs a POST request with JSON payload.
+ * @brief Performs a POST request with JSON payload. Used for /set-command or simple feedback.
  */
-- (void)postDataToEndpoint:(NSString * _Nonnull)endpoint
-                   payload:(NSDictionary * _Nonnull)payload
-                completion:(APIServiceCompletionBlock _Nonnull)completionBlock;
+- (void)postDataToEndpoint:(NSString *)endpoint
+                   payload:(NSDictionary *)payload
+                completion:(APIServiceCompletionBlock)completionBlock;
 
 /**
- * @brief Performs a POST request to upload a file using multipart/form-data.
+ * @brief Performs a POST request with multipart/form-data for file uploads.
+ * Used for the /upload endpoint.
  */
-- (void)uploadFileWithEndpoint:(NSString * _Nonnull)endpoint
-                      fromFile:(NSString * _Nonnull)filePath
+- (void)uploadFileWithEndpoint:(NSString *)endpoint
+                      fromFile:(NSString *)filePath
                     parameters:(NSDictionary * _Nullable)parameters
-                    completion:(APIServiceCompletionBlock _Nonnull)completionBlock;
+                    completion:(APIServiceCompletionBlock)completionBlock;
 
 @end
+
+NS_ASSUME_NONNULL_END
