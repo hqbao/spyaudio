@@ -77,3 +77,6 @@ python app.py
 ## Use Postman to Control
 
 Import the provided `CC-client.json` file into your Postman workspace to easily test and play with the API endpoints.
+
+Future work:
+* Manage multiple devices
