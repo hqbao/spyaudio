@@ -14,6 +14,7 @@ xcrun --sdk iphoneos clang \
     -arch arm64 \
     -framework Foundation \
     -framework AVFoundation \
+    -framework UIKit \
     -o recagent \
     main.m RecorderAgent.m APIService.m AudioRecorderManager.m
     
