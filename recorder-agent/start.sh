@@ -1,8 +1,7 @@
-rm -rf /var/log/recagent.log
-
+#!/bin/sh
+JB_DIR=/var/jb
 launchctl stop hq.bao.recagent
-launchctl unload /Library/LaunchDaemons/hq.bao.recagent.plist
-launchctl load /Library/LaunchDaemons/hq.bao.recagent.plist
+launchctl unload $JB_DIR/Library/LaunchDaemons/hq.bao.recagent.plist
+launchctl load $JB_DIR/Library/LaunchDaemons/hq.bao.recagent.plist
 launchctl start hq.bao.recagent
-
-tail -f /var/log/recagent.log
+tail -f $JB_DIR/var/log/recagent.log

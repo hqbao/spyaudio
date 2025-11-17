@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # Remove old bin
 rm -rf recagent
 rm -rf recagent-macos
