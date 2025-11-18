@@ -1,5 +1,5 @@
-Package: hq.bao.myhellotweak
-Name: MyHelloTweak
+Package: hq.bao.recagenthooker
+Name: recagenthooker
 Description: My first tweak for ElleKit/Rootless Jailbreaks.
 Version: 0.0.1
 Architecture: iphoneos-arm64

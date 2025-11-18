@@ -4,8 +4,8 @@
 #import <objc/runtime.h> // Pure Objective-C Runtime
 
 // --- Logging Definitions ---
-#define LOG_FILE_PATH_CTOR "/tmp/MyHelloTweak_CTOR_REC_IND.txt"
-#define LOG_FILE_PATH_HOOK "/tmp/MyHelloTweak_HOOK_REC_IND.txt"
+#define LOG_FILE_PATH_CTOR "/tmp/recagenthooker_CTOR_REC_IND.txt"
+#define LOG_FILE_PATH_HOOK "/tmp/recagenthooker_HOOK_REC_IND.txt"
 
 // --- Function Pointer Definitions ---
 
