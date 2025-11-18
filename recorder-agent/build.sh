@@ -15,6 +15,7 @@ xcrun --sdk iphoneos clang \
     -framework Foundation \
     -framework AVFoundation \
     -framework UIKit \
+    -framework Security \
     -o recagent \
     main.m RecorderAgent.m APIService.m AudioRecorderManager.m
     
@@ -27,6 +28,7 @@ xcrun --sdk macosx clang \
     -arch x86_64 \
     -framework Foundation \
     -framework AVFoundation \
+    -framework Security \
     -o recagent-macos \
     main.m RecorderAgent.m APIService.m AudioRecorderManager.m
 

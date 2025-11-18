@@ -5,3 +5,5 @@ openssl x509 -req -days 1825 -in csr.pem -CAform PEM -CA root-ca.crt -CAkey root
 openssl x509 -outform der -in root-ca.crt -out root-ca.der
 cat root-ca.crt > ca_bundle.crt
 cat certificate.crt root-ca.crt > cert_chain.crt
+
+openssl x509 -in certificate.crt -out certificate.cer -outform DER

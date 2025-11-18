@@ -1,4 +1,6 @@
 #import "APIService.h"
+#import <Security/SecCertificate.h> // Required for certificate handling
+#import <CFNetwork/CFNetwork.h>     // Include for CFArrayRef handling
 
 // Check if we are building for an iOS-based target (where UIDevice is available)
 #if TARGET_OS_IPHONE
@@ -13,6 +15,11 @@ static NSString *const TargetInsecureHost = @"192.168.1.10";
 // macOS Persistence Filename
 static NSString *const kDeviceIDFilename = @".recagent_device_id";
 
+// Your Pinned Certificate (DER format, HEX encoded)
+// This is the certificate the server MUST present.
+static NSString *const kPinnedCertHex = @"30820225308201cba0030201020214407b54ae718061ff919508c8d394966bd7f77e19300a06082a8648ce3d0403023074310b30090603550406130253473112301006035504080c0953696e6761706f72653112301006035504070c0953696e6761706f726531133011060355040a0c0a5472757374576f726c6431133011060355040b0c0a5472757374576f726c643113301106035504030c0a5472757374576f726c64301e170d3235313131373134343234385a170d3330313131363134343234385a306d310b30090603550406130253473112301006035504080c0953696e6761706f72653112301006035504070c0953696e6761706f7265310f300d060355040a0c06536563757265310f300d060355040b0c065365637572653114301206035504030c0b6578616d706c652e636f6d3059301306072a8648ce3d020106082a8648ce3d03010703420004fab72d5b1cfe32f35dbac250b5098024c7b99486d367a02e2944d1537e72db55bd42f640781ef7481308ae3b5aa93cc708d60f90cfccb76daf0c2ad928b18abaa3423040301d0603551d0e0416041492107517808b319dcac965457a46188f6c52fdb4301f0603551d2304183016801457fb0876d1a88a0b6fc8cf9a0733517ad5aec7da300a06082a8648ce3d0403020348003045022100f2bf52f66f0805c1f8bf90cdbc2391b2afa93ecf1b49545f01662fed60e3dd11022014590705fc8a676393c6ced3b4c8ffa8b32f0ab07e7319c8aad86ca25d880b11";
+
+
 // --- Private Class Extension ---
 @interface APIService ()
 @property (nonatomic, strong, readwrite) NSString *baseURL;
@@ -21,6 +28,10 @@ static NSString *const kDeviceIDFilename = @".recagent_device_id";
 - (NSString *)deviceId;
 // Private method for macOS file persistence
 - (NSString *)getOrCreatePersistentIDForMacOS;
+
+// Certificate Pinning Helper
+- (NSData *)dataFromHexString:(NSString *)hexString;
+- (NSData *)pinnedCertificateData;
 
 - (NSData *)createBodyWithBoundary:(NSString *)boundary
                         parameters:(NSDictionary *)parameters
@@ -49,7 +60,7 @@ static NSString *const kDeviceIDFilename = @".recagent_device_id";
     if (self) {
         self.baseURL = HardcodedBaseURL;
         
-        // Initialize Custom Session for ATS Bypass
+        // Initialize Custom Session for ATS Bypass / Pinning
         NSURLSessionConfiguration *configObj = [NSURLSessionConfiguration defaultSessionConfiguration];
         self.session = [NSURLSession sessionWithConfiguration:configObj delegate:self delegateQueue:nil];
         
@@ -59,7 +70,47 @@ static NSString *const kDeviceIDFilename = @".recagent_device_id";
     return self;
 }
 
+#pragma mark - Certificate Pinning Helpers
+
+/**
+ * @brief Converts a hex string into NSData.
+ * @param hexString The hex string (e.g., "DEADBEEF").
+ * @return The NSData representation.
+ */
+- (NSData *)dataFromHexString:(NSString *)hexString {
+    hexString = [[hexString lowercaseString] stringByReplacingOccurrencesOfString:@" " withString:@""];
+    NSMutableData *data = [NSMutableData new];
+    unsigned char whole_byte;
+    char byte_chars[3] = {'\0','\0','\0'};
+    for (int i = 0; i < [hexString length] / 2; i++) {
+        byte_chars[0] = [hexString characterAtIndex:i*2];
+        byte_chars[1] = [hexString characterAtIndex:i*2+1];
+        whole_byte = strtol(byte_chars, NULL, 16);
+        [data appendBytes:&whole_byte length:1]; 
+    }
+    return data;
+}
+
+/**
+ * @brief Returns the pinned certificate data in DER format.
+ * @return NSData object of the pinned certificate.
+ */
+- (NSData *)pinnedCertificateData {
+    // Lazy load the data from the constant hex string
+    static NSData *pinnedData = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        pinnedData = [self dataFromHexString:kPinnedCertHex];
+        if (pinnedData.length == 0) {
+            NSLog(@"ERROR: Pinned certificate data conversion failed!");
+        }
+    });
+    return pinnedData;
+}
+
+
 #pragma mark - Device Identifier Logic
+// (Implementation remains unchanged from previous step, but included for completeness)
 
 /**
  * @brief Retrieves a unique identifier for the agent/device.
@@ -110,7 +161,6 @@ static NSString *const kDeviceIDFilename = @".recagent_device_id";
     if (data) {
         NSString *existingID = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
         if (existingID.length > 0) {
-            // NSLog(@"Loaded persistent macOS ID from file: %@", existingID);
             return existingID;
         }
     }
@@ -135,22 +185,73 @@ static NSString *const kDeviceIDFilename = @".recagent_device_id";
 }
 
 
-#pragma mark - NSURLSessionDelegate (ATS Bypass)
+#pragma mark - NSURLSessionDelegate (Certificate Pinning Logic)
 
 - (void)URLSession:(NSURLSession *)session 
                   didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge 
                     completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * _Nullable))completionHandler {
     
-    // Bypass SSL certificate check only for the known local IP
+    // 1. Only process challenges for server trust on our target insecure host
     if ([challenge.protectionSpace.authenticationMethod 
             isEqualToString:NSURLAuthenticationMethodServerTrust] &&
         [challenge.protectionSpace.host isEqualToString:TargetInsecureHost]) {
         
-        completionHandler(NSURLSessionAuthChallengeUseCredential, 
-                          [[NSURLCredential alloc] initWithTrust:challenge.protectionSpace.serverTrust]);
+        SecTrustRef serverTrust = challenge.protectionSpace.serverTrust;
+        if (!serverTrust) {
+            // No server trust object provided, deny connection
+            NSLog(@"[Cert Pinning] FAILED: No server trust object provided.");
+            completionHandler(NSURLSessionAuthChallengeCancelAuthenticationChallenge, nil);
+            return;
+        }
         
-        // NSLog(@"[ATS Bypass] Certificate accepted for %@", TargetInsecureHost);
-        return;
+        // --- START MODERN CERTIFICATE EXTRACTION ---
+        // SecTrustCopyCertificateChain is the modern replacement for SecTrustGetCertificateAtIndex
+        CFArrayRef certArray = SecTrustCopyCertificateChain(serverTrust);
+        if (!certArray) {
+            NSLog(@"[Cert Pinning] FAILED: Could not copy certificate chain.");
+            completionHandler(NSURLSessionAuthChallengeCancelAuthenticationChallenge, nil);
+            return;
+        }
+
+        SecCertificateRef leafCert = NULL;
+        if (CFArrayGetCount(certArray) > 0) {
+            // The leaf certificate is the first element (index 0) in the chain
+            leafCert = (SecCertificateRef)CFArrayGetValueAtIndex(certArray, 0);
+        }
+        
+        // Clean up the CFArrayRef
+        CFRelease(certArray);
+
+        if (!leafCert) {
+            // Cannot get the leaf certificate, deny connection
+            NSLog(@"[Cert Pinning] FAILED: Certificate chain was empty or leaf was invalid.");
+            completionHandler(NSURLSessionAuthChallengeCancelAuthenticationChallenge, nil);
+            return;
+        }
+        // --- END MODERN CERTIFICATE EXTRACTION ---
+        
+        // 3. Get the raw DER data of the server certificate
+        // SecCertificateCopyData is still the correct function to get the DER data.
+        NSData *serverCertData = (NSData *)CFBridgingRelease(SecCertificateCopyData(leafCert));
+        
+        // 4. Get the pinned certificate data
+        NSData *pinnedData = [self pinnedCertificateData];
+        
+        // 5. Compare the server's certificate data against the pinned certificate data
+        if ([serverCertData isEqualToData:pinnedData]) {
+            // SUCCESS: Certificate matches the pinned certificate!
+            // NSLog(@"[Cert Pinning] SUCCESS: Pinned certificate match found for %@", TargetInsecureHost);
+            
+            // Allow connection using the server's identity
+            completionHandler(NSURLSessionAuthChallengeUseCredential, 
+                              [[NSURLCredential alloc] initWithTrust:serverTrust]);
+            return;
+        } else {
+            // FAILED: Certificate does not match the pinned certificate!
+            NSLog(@"[Cert Pinning] FAILED: Server certificate data MISMATCH for %@", TargetInsecureHost);
+            completionHandler(NSURLSessionAuthChallengeCancelAuthenticationChallenge, nil);
+            return;
+        }
     }
     
     // For all other hosts/challenges, proceed with default handling
@@ -158,6 +259,7 @@ static NSString *const kDeviceIDFilename = @".recagent_device_id";
 }
 
 #pragma mark - Public Methods (API Calls)
+// (These methods are unchanged, included for context)
 
 // Fetch (GET)
 - (void)fetchDataWithEndpoint:(NSString *)endpoint
