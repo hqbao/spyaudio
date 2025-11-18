@@ -26,3 +26,11 @@ Add the following environment variables to your shell profile (e.g., `~/.zshrc` 
 export THEOS=~/theos
 export THEOS_DEVICE_IP=<Target Device IP>    # e.g., 192.168.1.38
 export THEOS_DEVICE_PORT=22
+```
+
+Build and install
+```bash
+make clean
+make package install
+```
+
