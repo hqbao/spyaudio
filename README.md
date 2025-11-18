@@ -36,3 +36,5 @@ This document outlines the technical approach for developing a platform capable 
 ### Quick Deployment
 `./quick-start.sh`
 
+Demo: https://youtu.be/4N50MfgVPkU
+
