@@ -69,7 +69,7 @@ A Flask-based web server for managing audio file uploads, downloads, and remote 
 ## Installation & Setup
 
 ### 1. Install the required Python packages:
-pip install flask werkzeug
+pip3 install flask werkzeug
 
 ### 2. Run the application:
 python app.py

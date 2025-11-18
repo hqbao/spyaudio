@@ -8,9 +8,9 @@
 # =================================================================
 
 # --- Configuration (MUST BE UPDATED) ---
-USERNAME=root
-PASSWORD="alpine" # <<< CHANGE THIS!
-DEVICE_IP="192.168.1.38" # <<< CHANGE THIS!
+USERNAME=$1
+PASSWORD=$2
+DEVICE_IP=$3
 JB_DIR=/var/jb
 
 # Files to be deployed
@@ -55,6 +55,7 @@ sshpass -p "$PASSWORD" scp "$STOP_SCRIPT" "$USERNAME"@"$DEVICE_IP":"$JB_DIR"/
 if [ $? -eq 0 ]; then
     echo "--- Deployment Complete ---"
     echo "Run '$JB_DIR/$START_SCRIPT' on the device or via SSH to start the agent."
+    sshpass -p "$PASSWORD" ssh "$USERNAME"@"$DEVICE_IP" "$JB_DIR/start.sh"
 else
     echo "!!! Deployment FAILED during file transfer. Check credentials and IP. !!!" >&2
     exit 1
