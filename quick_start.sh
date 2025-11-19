@@ -4,7 +4,7 @@
 read -p "Enter Target Device IP (e.g., 192.168.1.38): " DEVICE_IP
 read -p "Enter Target Host IP (e.g., 192.168.1.10): " HOST_IP
 read -p "Enter Target Device Jailbreak Dir (\"/var/jb\" or empty): " JB_DIR
-read -p "Enter Target Device SSH Username: " USERNAME
+read -p "Enter Target Device SSH Username (root): " USERNAME
 read -s -p "Enter Target Device SSH Password (will not be displayed): " PASSWORD
 echo # Prints a newline after password input
 # USERNAME=root
