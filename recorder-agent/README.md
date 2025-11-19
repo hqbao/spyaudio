@@ -36,7 +36,7 @@ Execute the main build script to compile the application (`recagent`) and deploy
 ./build.sh <host IP> <jailbreak path>
 E.g. ./build.sh 192.168.1.10 /var/jb
 
-#deploy
+# Deploy
 ./deploy.sh <username> <password> <device IP> <jailbreak path>
 E.g. ./deploy.sh root alpine 192.168.1.38 /var/jb
 ```
