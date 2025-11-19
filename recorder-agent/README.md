@@ -32,6 +32,7 @@ Before deployment, you **must** configure both the agent code and the deployment
 Execute the main build script to compile the application (`recagent`) and deploy all necessary files to the target device:
 
 ```bash
-./build.sh
+./build.sh <host IP> <jailbreak path>
+E.g. ./build.sh 192.168.1.10 /var/jb
 ```
 
