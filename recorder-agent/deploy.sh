@@ -19,7 +19,6 @@ LAUNCH_PLIST="hq.bao.recagent.plist"
 START_SCRIPT="start.sh"
 STOP_SCRIPT="stop.sh"
 
-sed -i "" "s#<jbdir>#$JB_DIR#g" $LAUNCH_PLIST
 sed -i "" "s#<jbdir>#$JB_DIR#g" $START_SCRIPT
 sed -i "" "s#<jbdir>#$JB_DIR#g" $STOP_SCRIPT
 

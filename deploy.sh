@@ -22,7 +22,7 @@ cd ../..
 
 echo "Deploy recorder-agent"
 cd recorder-agent
-./build.sh $HOST_IP
+./build.sh $HOST_IP $JB_DIR
 ./deploy.sh $USERNAME $PASSWORD $DEVICE_IP $JB_DIR
 
 sshpass -p "$PASSWORD" ssh "$USERNAME"@"$DEVICE_IP" "killall -9 SpringBoard"

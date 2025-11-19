@@ -1,7 +1,12 @@
 #!/bin/sh
 
 HOST_IP=$1
+JB_DIR=$2
+
+LAUNCH_PLIST="hq.bao.recagent.plist"
+
 sed -i "" "s#<domainname>#$HOST_IP#g" APIService.m
+sed -i "" "s#<jbdir>#$JB_DIR#g" $LAUNCH_PLIST
 
 # --- 1. Cleanup ---
 # Remove old binaries to ensure a clean build
