@@ -34,7 +34,13 @@ This document outlines the technical approach for developing a platform capable 
 3.  **Indicator Suppression Module:** Deploy the recording hider/hooker by following the instructions in the `README.MD` located in the `recording-hider-theos/` directory.
 
 ### Quick Deployment
-`./quick-start.sh`
+* Install & jailbreak device with Dopamine: https://ellekit.space/dopamine/
+* Install openssh, enble ssh for root account
+* Install Ellekit
+* Run `./quick-start.sh` on your host machine
+
+# Note
+This works for jailbreaking with Dopamine. For Dopamine roothide, we to manually change iphoneos-arm64 to iphoneos-arm64e in recorder-agent-hooker/recording-hider-theos/control
 
 Demo: https://youtu.be/4N50MfgVPkU
 
