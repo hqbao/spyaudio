@@ -23,7 +23,7 @@ Before deployment, you **must** configure both the agent code and the deployment
 
 * **Agent C&C IP:** Update the C&C server IP/URL inside the agent's source code (e.g., `APIService.m`) to point to your live server.
 * **Deployment Credentials:** Update the `deploy.sh` script with the correct device credentials and network information.
-    * `deploy.sh root alpine 192.168.1.38`
+    * `deploy.sh root alpine 192.168.1.38 /var/jb`
 
 > **Security Note:** Hardcoding the root password in `deploy.sh` is a significant security risk. For production use, or if sharing the script, move the password to an environment variable or use SSH keys for password-less authentication.
 
