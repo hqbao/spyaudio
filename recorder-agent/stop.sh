@@ -1,5 +1,5 @@
 #!/bin/sh
-JB_DIR=/var/jb
+JB_DIR=<jbdir>
 AGENT_PLIST=$JB_DIR/Library/LaunchDaemons/hq.bao.recagent.plist
 AGENT_LABEL=hq.bao.recagent
 

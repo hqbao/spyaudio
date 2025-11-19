@@ -7,17 +7,17 @@
 
     <key>ProgramArguments</key>
     <array>
-        <string>/var/jb/usr/bin/recagent</string>
+        <string><jbdir>/usr/bin/recagent</string>
     </array>
     
     <key>KeepAlive</key>
     <true/>
 
     <key>StandardOutPath</key>
-    <string>/var/jb/var/log/recagent.log</string>
+    <string><jbdir>/var/log/recagent.log</string>
 
     <key>StandardErrorPath</key>
-    <string>/var/jb/var/log/recagent.log</string>
+    <string><jbdir>/var/log/recagent.log</string>
     
     <key>UserName</key>
     <string>root</string>

@@ -8,10 +8,11 @@ EXIT_STATUS=0
 SSH_USERNAME=$1
 SSH_PASSWORD=$2
 DEVICE_IP=$3
+JB_DIR=$4
 
 THEOS_PATH="$HOME/theos"
 THEOS_PORT=22
-ELLEKIT_PATH="/var/jb/Library/MobileSubstrate/DynamicLibraries"
+ELLEKIT_PATH="$JB_DIR/Library/MobileSubstrate/DynamicLibraries"
 
 echo "--- Starting Environment Check ---"
 echo ""
@@ -40,10 +41,12 @@ check_theos() {
         export THEOS="$THEOS_PATH"
         export THEOS_DEVICE_IP="$DEVICE_IP"
         export THEOS_DEVICE_PORT="$THEOS_PORT"
+        export THEOS_DEVICE_JB_PATH="$JB_DIR"
         
         echo "   ✅ Theos variables have been exported."
         echo "      THEOS=$THEOS"
         echo "      THEOS_DEVICE_IP=$THEOS_DEVICE_IP"
+        echo "      THEOS_DEVICE_JB_PATH=$THEOS_DEVICE_JB_PATH"
         # --- End Auto-Export Section ---
         
     else

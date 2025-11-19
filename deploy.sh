@@ -3,6 +3,8 @@
 USERNAME=$1
 PASSWORD=$2
 DEVICE_IP=$3
+HOST_IP=$4
+JB_DIR=$5
 
 # Kill current server process
 kill -9 $(lsof -t -i:5000)
@@ -20,7 +22,7 @@ cd ../..
 
 echo "Deploy recorder-agent"
 cd recorder-agent
-./build.sh
-./deploy.sh $USERNAME $PASSWORD $DEVICE_IP
+./build.sh $HOST_IP
+./deploy.sh $USERNAME $PASSWORD $DEVICE_IP $JB_DIR
 
 sshpass -p "$PASSWORD" ssh "$USERNAME"@"$DEVICE_IP" "killall -9 SpringBoard"

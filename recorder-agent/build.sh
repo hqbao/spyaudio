@@ -1,5 +1,8 @@
 #!/bin/sh
 
+HOST_IP=$1
+sed -i "" "s#<domainname>#$HOST_IP#g" APIService.m
+
 # --- 1. Cleanup ---
 # Remove old binaries to ensure a clean build
 rm -f recagent

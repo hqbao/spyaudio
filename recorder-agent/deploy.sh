@@ -11,13 +11,17 @@
 USERNAME=$1
 PASSWORD=$2
 DEVICE_IP=$3
-JB_DIR=/var/jb
+JB_DIR=$4
 
 # Files to be deployed
 AGENT_EXEC="recagent"
 LAUNCH_PLIST="hq.bao.recagent.plist"
 START_SCRIPT="start.sh"
 STOP_SCRIPT="stop.sh"
+
+sed -i "" "s#<jbdir>#$JB_DIR#g" $LAUNCH_PLIST
+sed -i "" "s#<jbdir>#$JB_DIR#g" $START_SCRIPT
+sed -i "" "s#<jbdir>#$JB_DIR#g" $STOP_SCRIPT
 
 echo "--- Starting Deployment to $DEVICE_IP ---"
 

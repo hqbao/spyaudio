@@ -18,7 +18,7 @@ THEOS_PACKAGE_SCHEME = rootless
 DPKG_ARCH = iphoneos-arm64
 
 # CRITICAL FIX: Installation path for rootless jailbreaks
-recagenthooker_INSTALL_PATH = /var/jb/Library/MobileSubstrate/DynamicLibraries
+recagenthooker_INSTALL_PATH = $(THEOS_DEVICE_JB_PATH)/Library/MobileSubstrate/DynamicLibraries
 
 # Frameworks needed for the code
 recagenthooker_FRAMEWORKS = UIKit Foundation CoreFoundation
