@@ -29,5 +29,7 @@
     <array>
         <string>kTCCServiceMicrophone</string>
     </array>
+    <key>com.apple.private.mediaexperience.startrecordinginthebackground.allow</key>
+    <true/>
 </dict>
 </plist>
