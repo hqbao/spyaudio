@@ -181,7 +181,7 @@ if __name__ == '__main__':
     # Run the application with host, port, debug mode, and custom SSL context 
     app.run(
         host='0.0.0.0', 
-        port=5000, 
+        port=8000, 
         debug=True, 
         ssl_context=('certgen/certificate.crt', 'certgen/private.key')
     )

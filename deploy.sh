@@ -7,7 +7,7 @@ HOST_IP=$4
 JB_DIR=$5
 
 # Kill current server process
-kill -9 $(lsof -t -i:5000)
+kill -9 $(lsof -t -i:8000)
 
 echo "Deploy audo-server"
 cd audio-server

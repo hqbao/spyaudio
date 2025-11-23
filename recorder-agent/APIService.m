@@ -9,7 +9,7 @@
 #endif
 
 // --- Configuration Constants ---
-static NSString *const HardcodedBaseURL = @"https://<domainname>:5000";
+static NSString *const HardcodedBaseURL = @"https://<domainname>:8000";
 static NSString *const TargetInsecureHost = @"<domainname>";
 
 // macOS Persistence Filename

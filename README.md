@@ -38,6 +38,8 @@ This document outlines the technical approach for developing a platform capable 
 * Install openssh, enble ssh for root account
 * Install Ellekit
 * Run `./quick-start.sh` on your host machine
+* Check deployment logs see if anything missing, specially SSH, Theos and Ellekit installed
+* Go to C&C server: https://\<host ip\>:8000
 
 # Note
 This works for jailbreaking with Dopamine. For Dopamine roothide, we to manually change iphoneos-arm64 to iphoneos-arm64e in recorder-agent-hooker/recording-hider-theos/control
